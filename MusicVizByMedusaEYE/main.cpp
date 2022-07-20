@@ -57,15 +57,6 @@ Dots CacuIntercetingDots(BA_Array linesIntercept, BA_Array linesSlope, int i)
 	BA_Array x = Bi.Reduc(Bj, true).Devide(Aj.Reduc(Ai, true), true);
 	// y = Ai * x + Bi
 	BA_Array y = Ai.Mul(x, true).Add(Bi, true);
-	//if (x.dataF[0] == 0 && y.dataF[0] == 0)
-	//{
-	//	Bi.Str();
-	//	Ai.Str();
-	//	Bj.Str();
-	//	Aj.Str();
-	//	x.Str();
-	//	y.Str();
-	//}
 	// select data for side i, get idx
 	BA_Array xMask = x.Ge(sideSize / 2., true);
 	BA_Array yMask = y.Ge(sideSize / 2., true);
@@ -86,6 +77,29 @@ Dots CacuIntercetingDots(BA_Array linesIntercept, BA_Array linesSlope, int i)
 		}
 	// return selected data in format of list(X, Y)
 	return Dots(x_, y_);
+}
+// func for draw a line in window texture
+void DrawLineInWindow(float* dot1, float* dot2, MyUI* pui, int* col, float* coli)
+{
+	float x1 = dot1[0], y1 = dot1[1], x2 = dot2[0], y2 = dot2[1];
+	if (x1 == x2 || y1 == y2 || (x1 == 0. && y1 == 0.) || (x2 == 0. && y2 == 0.))
+		return;
+	// if dx > dy, dx+=1, dy+=ddy, else if dx < dy, dx+=
+	float ddy = (y1 - y2) / (x1 - x2);
+	float ddx = ddy > 1.f ? 1 / ddy : 1.f;
+	ddy = ddy > 1.f ? 1.f : ddy;
+	float steps = x2 - x1;
+
+	SDL_Rect pos = { 0,0, 1, 1 };
+
+	for (float dx = 0, dy = 0; dx < steps; dx += ddx, dy += ddy)
+	{
+		pos.x = (int)(x1 + dx);
+		pos.y = (int)(y1 + dy);
+		col = ProduceRainbowCol(col, coli, 0.01);
+		SDL_SetRenderDrawColor(pui->win->rend, col[0], col[1], col[2], 255);
+		SDL_RenderDrawPoint(pui->win->rend, pos.x, pos.y);
+	}
 }
 
 int main(int argc, char* argv[])
@@ -152,17 +166,10 @@ int main(int argc, char* argv[])
 		}
 	}
 	// init a NULL window
-	int* defaultBGCol = intdup(3, 0, 0, 0);
-	MyUI* pui = MyUI_Init("MusicVizByMedusaEYE",
-		(_ULL)sideSize, (_ULL)sideSize, 0, defaultBGCol);
+	MyUI* pui = MyUI_Init("MusicVizByMedusaEYE", (_ULL)sideSize, (_ULL)sideSize, 0, NULL);
 	pui->win->pre_title = pui->win->pre_win;
-	int* col = intdup(3, 0, 0, 0), x1,y1,x2,y2;
-	float* coli = floatdup(1, (float)rand()/9.f);
-	// draw plot
-	//SDL_Surface* pSur_paint = SDL_CreateRGBSurface(0, 1, 1, 32, 0, 0, 0, 0);
-	//SDL_FillRect(pSur_paint, NULL, SDL_MapRGB(pSur_paint->format, 255, 255, 255));
-	//SDL_Texture* pTex_paint = SDL_CreateTextureFromSurface(pui->win->rend, pSur_paint);
-	//SDL_Rect re_paint = { 0,0, 1 ,  1 };
+	int* col = intdup(3, 0, 0, 0);
+	float* coli = floatdup(1, (float)rand() / 9.f);
 	// GUI Loop
 	while (pui->pF_PollQuit(pui) == 0)
 	{
@@ -170,14 +177,9 @@ int main(int argc, char* argv[])
 			p1 != NULL && pui->pF_PollQuit(pui) == 0;
 			p1 = (float*)List_Copy(dotsAP), p2 = (float*)List_Copy(dotsBP))
 		{
-			x1 = int(p1[0]), y1 = int(p1[1]), x2 = int(p2[0]), y2 = int(p2[1]);
-			if ( x1 + y1 != 0 && x2 + y2 != 0 && p1[2]>=0)
+			if (p1[2] <= 2)
 			{
-				col = ProduceRainbowCol(col, coli);
-				SDL_SetRenderDrawColor(pui->win->rend, col[0], col[1], col[2], 255);
-				//printf("%4d | %4d - %4d | %4d  -  %4d %4d %4d\n", x1, y1, x2, y2, col[0], col[1], col[2]);
-				SDL_RenderDrawLine(pui->win->rend, x1, y1, x2, y2);
-				SDL_Delay(2);
+				DrawLineInWindow(p1, p2, pui, col, coli);
 				SDL_RenderPresent(pui->win->rend);
 			}
 		}
