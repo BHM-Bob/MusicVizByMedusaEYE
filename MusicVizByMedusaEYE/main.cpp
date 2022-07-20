@@ -78,21 +78,21 @@ Dots CacuIntercetingDots(BA_Array linesIntercept, BA_Array linesSlope, int i)
 	// return selected data in format of list(X, Y)
 	return Dots(x_, y_);
 }
-// func for draw a line in window texture
+// func for draw a line in window using SDL_RenderDrawPoint
 void DrawLineInWindow(float* dot1, float* dot2, MyUI* pui, int* col, float* coli)
 {
 	float x1 = dot1[0], y1 = dot1[1], x2 = dot2[0], y2 = dot2[1];
 	if (x1 == x2 || y1 == y2 || (x1 == 0. && y1 == 0.) || (x2 == 0. && y2 == 0.))
 		return;
-	// if dx > dy, dx+=1, dy+=ddy, else if dx < dy, dx+=
-	float ddy = (y1 - y2) / (x1 - x2);
+	// if dx > dy, dx+=1, dy+=ddy, else if dx < dy, dx+=ddx, dy+=1
+	float ddy = (y2 - y1) / (x2 - x1);
 	float ddx = ddy > 1.f ? 1 / ddy : 1.f;
 	ddy = ddy > 1.f ? 1.f : ddy;
-	float steps = x2 - x1;
+	float steps = (ddy == 1.f) ? (y2 > y1 ? y2 - y1 : y1 - y2) : (x2 > x1 ? x2 - x1 : x1 - x2);
 
 	SDL_Rect pos = { 0,0, 1, 1 };
 
-	for (float dx = 0, dy = 0; dx < steps; dx += ddx, dy += ddy)
+	for (float dx = 0, dy = 0, s = 0; s < steps; dx += ddx, dy += ddy, s++)
 	{
 		pos.x = (int)(x1 + dx);
 		pos.y = (int)(y1 + dy);
