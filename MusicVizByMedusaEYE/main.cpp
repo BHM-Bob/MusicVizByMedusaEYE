@@ -9,7 +9,7 @@
 // global var
 List* dotsAP = List_Init(), * dotsBP = List_Init();
 //set global settings
-float sideSize = 800.f, interval = 10.f;
+float sideSize = 1000.f, interval = 10.f;
 _ULL loopTimes = 3;
 // useful dataStruct
 typedef struct Dots Dots;
@@ -79,7 +79,7 @@ Dots CacuIntercetingDots(BA_Array linesIntercept, BA_Array linesSlope, int i)
 	return Dots(x_, y_);
 }
 // func for drawing a line in window using SDL_RenderDrawPoint
-void DrawLineInWindow(float* dot1, float* dot2, MyUI* pui, int* col, float* coli)
+void DrawLineInWindow(float* dot1, float* dot2, MyUI* pui, int* col, float* coli, float* dColi)
 {
 	float winH = pui->win->pre_win->h;
 	float x1 = dot1[0], y1 = winH - dot1[1], x2 = dot2[0], y2 = winH - dot2[1];
@@ -94,7 +94,7 @@ void DrawLineInWindow(float* dot1, float* dot2, MyUI* pui, int* col, float* coli
 	for (float dx = 0, dy = 0, s = 0; s < steps; dx += ddx, dy += ddy, s++)
 	{
 		x = (int)(x1 + dx), y = (int)(y1 + dy);
-		col = ProduceRainbowCol(col, coli, 0.01);
+		col = ProduceRainbowCol(col, coli, *dColi);
 		SDL_SetRenderDrawColor(pui->win->rend, col[0], col[1], col[2], 255);
 		SDL_RenderDrawPoint(pui->win->rend, x, y);
 	}
@@ -167,20 +167,16 @@ int main(int argc, char* argv[])
 	MyUI* pui = MyUI_Init("MusicVizByMedusaEYE", (_ULL)sideSize, (_ULL)sideSize, 0, NULL);
 	pui->win->pre_title = pui->win->pre_win;
 	int* col = intdup(3, 0, 0, 0);
-	float* coli = floatdup(1, (float)rand() / 9.f);
+	float* coli = floatdup(2, (float)rand() / 9.f, 0.0009f);
 	// GUI Loop
 	while (pui->pF_PollQuit(pui) == 0)
 	{
 		for (float* p1 = (float*)List_Copy(dotsAP), *p2 = (float*)List_Copy(dotsBP);
 			p1 != NULL && pui->pF_PollQuit(pui) == 0;
 			p1 = (float*)List_Copy(dotsAP), p2 = (float*)List_Copy(dotsBP))
-		{
 			if (p1[2] <= 2 && (p1[0] != 0. || p1[1] != 0.) && (p2[0] != 0. || p2[1] != 0.))
-			{
-				DrawLineInWindow(p1, p2, pui, col, coli);
-				SDL_RenderPresent(pui->win->rend);
-			}
-		}
+				DrawLineInWindow(p1, p2, pui, col, coli, coli + 1);
+		SDL_RenderPresent(pui->win->rend);
 		pui->pF_Checktitle(pui);
 		pui->pF_Update(pui, 0, 0);
 	}
