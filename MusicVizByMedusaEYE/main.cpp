@@ -119,7 +119,8 @@ int main(int argc, char* argv[])
 		}
 	}
 	// init a NULL window
-	ba::ui::QUI ui("MusicVizByMedusaEYE", (_ULL)sideSize, (_ULL)sideSize, 0, NULL);
+	ba::ui::QUI ui("MusicVizByMedusaEYE", (_ULL)sideSize, (_ULL)sideSize, 0,
+		ba::ui::MakeSDLCol(NULL, 0,0,0,255));
 	int* col = TypeDupR(NULL, 3, 0, 0, 0);
 	float* coli = TypeDupR(NULL, 2, (float)rand() / 9.f, 0.0009f);
 	// GUI Loop
