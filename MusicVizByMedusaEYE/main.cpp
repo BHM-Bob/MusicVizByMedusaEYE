@@ -101,25 +101,15 @@ int main(int argc, char* argv[])
 		});//.Seq(sideSize - interval, -interval);
 	ba::tensor<float> all0({ (_LL)(sideSize / interval) - 1 });
 	ba::tensor<float> allS({ (_LL)(sideSize / interval) - 1 }, sideSize);
-	// first loop dots
-	tensors d1{fromInt2S, all0};
-	tensors d2{allS, fromInt2S};
-	tensors d3{fromS2Int, allS};
-	tensors d4{ all0, fromS2Int };
-	std::vector<tensors> sideDots = { d1, d2, d3, d4, d1 };
 	// draw first loop
 	tensors pack, dots;
-	std::vector<tensors> intercetingDotsPack;
-	for (int i = 0; i < 4; i++)
+	std::vector<tensors> intercetingDotsPack(4), sideDots;
+	intercetingDotsPack[0] = { fromInt2S, all0 };
+	intercetingDotsPack[1] = { allS, fromInt2S };
+	intercetingDotsPack[2] = { fromS2Int, allS };
+	intercetingDotsPack[3] = { all0, fromS2Int };
+	for (_ULL loopTime = 0, sideLen = 0; loopTime < loopTimes; loopTime++)
 	{
-		pack = DrawLinesWithXY(sideDots[i], sideDots[i+1], 0.f, dotsAP, dotsBP);
-		dots = CacuIntercetingDots(pack[0], pack[1], i);
-		intercetingDotsPack.push_back(dots);
-	}
-	// draw left loops
-	for (_ULL loopTime = 1, sideLen = 0; loopTime < loopTimes; loopTime++)
-	{
-		sideDots.clear();
 		sideDots = { intercetingDotsPack[0], intercetingDotsPack[1], intercetingDotsPack[2],
 			intercetingDotsPack[3], intercetingDotsPack[0] };
 		intercetingDotsPack.clear();

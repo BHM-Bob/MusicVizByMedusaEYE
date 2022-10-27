@@ -2,7 +2,7 @@
 Author: BHM-Bob G 2262029386@qq.com
 Date: 2022-07-08 00:23:22
 LastEditors: BHM-Bob
-LastEditTime: 2022-10-27 18:15:33
+LastEditTime: 2022-10-27 23:54:08
 Description: Draw MeduzaEye
 '''
 import turtle, numpy as np, time
@@ -39,9 +39,9 @@ def CacuIntercetingDots(linesIntercept:np.ndarray, linesSlope:np.ndarray, i:int)
     # y = Ai * x + Bi
     y = Ai * x + Bi
     # select data for side i, get idx
-    xMask = x >= (sideSize / 2)
-    yMask = y >= (sideSize / 2)
-    xMaskVal, yMaskVal = 1 if i <= 1 else 0, 1 if (1 <= i and i <= 2) else 0
+    xMask = x >= (sideSize / 2 -1)#some is 399.9999999999775
+    yMask = y >= (sideSize / 2 -1)
+    xMaskVal, yMaskVal = 1 if (0 <= i <= 1) else 0, 1 if (1 <= i <= 2) else 0
     mask = (xMask == xMaskVal) * (yMask == yMaskVal)
     # return selected data in format of X, Y
     return [x[mask], y[mask]]
@@ -58,19 +58,18 @@ intercetingDotsPack[1] = [allS, fromInt2S]
 intercetingDotsPack[2] = [fromS2Int, allS]
 intercetingDotsPack[3] = [all0, fromS2Int]
 # draw loops
-for loopTime in range(0, 3):
+for loopTime in range(0, 1):
     sideDots = [intercetingDotsPack[i] for i in [0,1,2,3,0]]
     intercetingDotsPack.clear()
     for i in range(4):
         linesIntercept, linesSlope = DrawLinesWithXY(sideDots[i], sideDots[i+1], loopTime, i)
         dots = CacuIntercetingDots(linesIntercept, linesSlope, i)
         intercetingDotsPack.append(dots)
-# GUI
 
 dotsLayer = 2
 for dotsSide in range(4):
     print(dotsSide, len(list(filter(lambda x : x[-2] == dotsLayer and x[-1] == dotsSide, dotsAP))))
-
+# GUI
 turtle.screensize(canvwidth=sideSize, canvheight=sideSize, bg='black')
 turtle.pencolor('white')
 turtle.speed(0)
