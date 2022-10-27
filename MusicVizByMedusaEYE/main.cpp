@@ -93,12 +93,10 @@ int main(int argc, char* argv[])
 	balist<float> dotsBP = balist<float>();
 	// usefull var for fast understanding
 	ba::tensor<float> maxSideDots({ (_LL)(sideSize / interval) - 1 });
-	ba::tensor<float> fromInt2S = ba::tensor<float>({ (_LL)(sideSize / interval) - 1 }).selfmap([=](float* r) {
-		for (_LL i = 0; i < maxSideDots.len; *r = interval * (i + 1), i++);
-		});//.Seq(interval, interval);
-	ba::tensor<float> fromS2Int = ba::tensor<float>({ (_LL)(sideSize / interval) - 1 }).selfmap([=](float* r) {
-		for (_LL i = 0; i < maxSideDots.len; *r = sideSize - interval * (i + 1), i++);
-		});//.Seq(sideSize - interval, -interval);
+	ba::tensor<float> fromInt2S = ba::tensor<float>({ (_LL)(sideSize / interval) - 1 }).\
+		selfmap([&](float* r, _LL i) { *r = interval * (i + 1); });//.Seq(interval, interval);
+	ba::tensor<float> fromS2Int = ba::tensor<float>({ (_LL)(sideSize / interval) - 1 }).\
+		selfmap([&](float* r, _LL i) { *r = sideSize - interval * (i + 1); });//.Seq(sideSize - interval, -interval);
 	ba::tensor<float> all0({ (_LL)(sideSize / interval) - 1 });
 	ba::tensor<float> allS({ (_LL)(sideSize / interval) - 1 }, sideSize);
 	// draw first loop
@@ -130,7 +128,7 @@ int main(int argc, char* argv[])
 		for (float* p1 = dotsAP.Copy(), *p2 = dotsBP.Copy();
 			p1 != NULL && ui.pollQuit() == 0;
 			p1 = dotsAP.Copy(), p2 = dotsBP.Copy())
-			if (p1[2] <= 2 && (p1[0] != 0. || p1[1] != 0.) && (p2[0] != 0. || p2[1] != 0.))
+			if (p1[2] <= 2 && (p1[0] >= 0. || p1[1] >= 0.) && (p2[0] >= 0. || p2[1] >= 0.))
 				DrawLineInWindow(p1, p2, &ui, col, coli, coli + 1);
 		SDL_RenderPresent(ui.win->rend);
 		ui.update(0, 0);
