@@ -31,7 +31,7 @@ tensors DrawLinesWithXY(tensors dotsA, tensors dotsB,
 {
 	tensors pack = CacuInterAndSlope(dotsA[0], dotsA[1], dotsB[0], dotsB[1]);
 	ba::tensor<float> linesIntercept = pack[0], linesSlope = pack[1];
-	for (_ULL idx = 0; idx < dotsA[0].len; idx++)
+	for (_LL idx = 0; idx < dotsA[0].len; idx++)
 	{
 		dotsAP.Put(TypeDupR(pba->STmem, 3, dotsA[0].data[idx], dotsA[1].data[idx], loopTime));
 		dotsBP.Put(TypeDupR(pba->STmem, 3, dotsB[0].data[idx], dotsB[0].data[idx], loopTime));
@@ -44,7 +44,7 @@ tensors DrawLinesWithXY(tensors dotsA, tensors dotsB,
 tensors CacuIntercetingDots(ba::tensor<float> linesIntercept, ba::tensor<float> linesSlope, int i)
 {
 	// create seq, data like 0(padding), b1, b2 or b1, b2, 0(padding)
-	_ULL seqSize = linesIntercept.shape[0];
+	_LL seqSize = linesIntercept.shape[0];
 	ba::tensor<float> Bi = linesIntercept.sub(0, seqSize - 1);
 	ba::tensor<float> Ai = linesSlope.sub(0, seqSize - 1);
 	ba::tensor<float> Bj = linesIntercept.sub(1, seqSize);
@@ -54,7 +54,7 @@ tensors CacuIntercetingDots(ba::tensor<float> linesIntercept, ba::tensor<float> 
 	// y = Ai * x + Bi
 	ba::tensor<float> y = Ai * x + Bi;
 	// select data for side i, get idx
-	float xMaskVal = (i <= 1) ? 1.f : 0.f, yMaskVal = (1 <= i && i <= 2) ? 1.f : 0.f;
+	bool xMaskVal = (i <= 1) ? 1.f : 0.f, yMaskVal = (1 <= i && i <= 2) ? 1.f : 0.f;
 	ba::tensor<float> xMask = x.map([=](float r) {
 		return (r >= (sideSize / 2.f)) == xMaskVal ? 1.f : 0.f; });
 	ba::tensor<float> yMask = y.map([=](float r) {
@@ -65,24 +65,23 @@ tensors CacuIntercetingDots(ba::tensor<float> linesIntercept, ba::tensor<float> 
 	return tensors{ x.masksub(mask), y.masksub(mask) };
 }
 // func for drawing a line in window using SDL_RenderDrawPoint
-void DrawLineInWindow(float* dot1, float* dot2, ba::ui::QUI* pui, int* col, float* coli, float* dColi)
+void DrawLineInWindow(float* dot1, float* dot2, ba::ui::colorSur* cs)
 {
-	float winH = pui->win->re.h;
+	float winH = (float)cs->re.h;
 	float x1 = dot1[0], y1 = winH - dot1[1], x2 = dot2[0], y2 = winH - dot2[1];
 	if (x1 == x2 && y1 == y2)
 		return;// shortcut quit
-	float signDX = x2 > x1 ? 1. : -1., signDY = y2 > y1 ? 1. : -1.;
+	float signDX = x2 > x1 ? 1.f : -1.f, signDY = y2 > y1 ? 1.f : -1.f;
 	float absDX = x2 > x1 ? x2 - x1 : x1 - x2, absDY = y2 > y1 ? y2 - y1 : y1 - y2;
-	float ddx = (x1 == x2) ? 0. : (absDX >= absDY ? signDX : signDX * absDX / absDY);
-	float ddy = (y1 == y2) ? 0. : (absDY >= absDX ? signDY : signDY * absDY / absDX);
+	float ddx = (x1 == x2) ? 0.f : (absDX >= absDY ? signDX : signDX * absDX / absDY);
+	float ddy = (y1 == y2) ? 0.f : (absDY >= absDX ? signDY : signDY * absDY / absDX);
 	float steps = (ddx == signDX) ? absDX : absDY;
 	int x = 0, y = 0;
-	for (float dx = 0, dy = 0, s = 0; s < steps; dx += ddx, dy += ddy, s++)
+	for (float dx = 0.f, dy = 0.f, s = 0.f; s < steps; dx += ddx, dy += ddy, s++)
 	{
 		x = (int)(x1 + dx), y = (int)(y1 + dy);
-		col = ba::ui::ProduceRainbowCol(col, coli, *dColi);
-		SDL_SetRenderDrawColor(pui->win->rend, col[0], col[1], col[2], 255);
-		SDL_RenderDrawPoint(pui->win->rend, x, y);
+		if(0<=x && x<cs->re.w && 0 <= y && y < cs->re.h)
+			cs->mask[y][x] = 1;
 	}
 }
 
@@ -121,16 +120,18 @@ int main(int argc, char* argv[])
 	// init a NULL window
 	ba::ui::QUI ui("MusicVizByMedusaEYE", (_ULL)sideSize, (_ULL)sideSize, 0,
 		ba::ui::MakeSDLCol(NULL, 0,0,0,255));
-	int* col = TypeDupR(NULL, 3, 0, 0, 0);
-	float* coli = TypeDupR(NULL, 2, (float)rand() / 9.f, 0.0009f);
+	ba::ui::colorSur cs(&ui, NULL, ui.win->re, true);
+	ui.otherTex["cst"] = new std::pair<SDL_Texture*, SDL_Rect*>(cs.tex, &cs.re);
+	for (float* p1 = dotsAP.Copy(), *p2 = dotsBP.Copy();
+		p1 != NULL;
+		p1 = dotsAP.Copy(), p2 = dotsBP.Copy())
+		if (p1[2] <= 2 && (p1[0] >= 0. || p1[1] >= 0.) && (p2[0] >= 0. || p2[1] >= 0.))
+			DrawLineInWindow(p1, p2, &cs);
+	ui.addOtherTex("cst", NULL, &cs.re);
 	// GUI Loop
 	while (ui.pollQuit() == 0)
 	{
-		for (float* p1 = dotsAP.Copy(), *p2 = dotsBP.Copy();
-			p1 != NULL && ui.pollQuit() == 0;
-			p1 = dotsAP.Copy(), p2 = dotsBP.Copy())
-			if (p1[2] <= 2 && (p1[0] >= 0. || p1[1] >= 0.) && (p2[0] >= 0. || p2[1] >= 0.))
-				DrawLineInWindow(p1, p2, &ui, col, coli, coli + 1);
+		ui.updateOtherTex("cst", cs.getTex());
 		SDL_RenderPresent(ui.win->rend);
 		ui.update(0, 0);
 	}
