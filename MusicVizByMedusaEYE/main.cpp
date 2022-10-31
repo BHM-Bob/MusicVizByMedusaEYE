@@ -118,10 +118,8 @@ int main(int argc, char* argv[])
 		}
 	}
 	// init a NULL window
-	ba::ui::QUI ui("MusicVizByMedusaEYE", (_ULL)sideSize, (_ULL)sideSize, 0,
-		ba::ui::MakeSDLCol(NULL, 0,0,0,255));
+	ba::ui::QUI ui("MusicVizByMedusaEYE", (_ULL)sideSize, (_ULL)sideSize, 0, NULL);
 	ba::ui::colorSur cs(&ui, NULL, ui.win->re, true);
-	ui.otherTex["cst"] = new std::pair<SDL_Texture*, SDL_Rect*>(cs.tex, &cs.re);
 	for (float* p1 = dotsAP.Copy(), *p2 = dotsBP.Copy();
 		p1 != NULL;
 		p1 = dotsAP.Copy(), p2 = dotsBP.Copy())
@@ -132,8 +130,7 @@ int main(int argc, char* argv[])
 	while (ui.pollQuit() == 0)
 	{
 		ui.updateOtherTex("cst", cs.getTex());
-		SDL_RenderPresent(ui.win->rend);
-		ui.update(0, 0);
+		ui.update(1, 1);
 	}
 	return MyBA_Quit();
 }
