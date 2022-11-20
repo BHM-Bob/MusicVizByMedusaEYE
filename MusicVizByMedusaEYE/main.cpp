@@ -119,7 +119,7 @@ int main(int argc, char* argv[])
 	}
 	// init a NULL window
 	ba::ui::QUI ui("MusicVizByMedusaEYE", (_ULL)sideSize, (_ULL)sideSize, 0, NULL);
-	ba::ui::colorSur cs(&ui, NULL, ui.win->re, true);
+	ba::ui::colorSur cs(ui.activeWin, NULL, ui.activeWin->re, true);
 	for (float* p1 = dotsAP.Copy(), *p2 = dotsBP.Copy();
 		p1 != NULL;
 		p1 = dotsAP.Copy(), p2 = dotsBP.Copy())
@@ -130,7 +130,7 @@ int main(int argc, char* argv[])
 	while (ui.pollQuit() == 0)
 	{
 		ui.updateOtherTex("cst", cs.getTex());
-		ui.update(1, 1);
+		ui.update(NULL, 1, 1);
 	}
 	return MyBA_Quit();
 }
