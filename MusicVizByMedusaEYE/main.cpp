@@ -1,10 +1,7 @@
 ﻿
-#include"../../../BA/Cpp/BA_1_2/BA_1_2/BA_Base.hpp"
+#include"../../../BA/Cpp/BA_1_2/BA_1_2/BA_1_2.hpp"
+#undef BA_USE_CMD
 #include"../../../BA/Cpp/BA_1_2/BA_1_2/BA_1_2.cpp"
-#include"../../../BA/Cpp/BA_1_2/BA_1_2/BA_CMD.cpp"
-#include"../../../BA/Cpp/BA_1_2/BA_1_2/BA_Mem.cpp"
-#include"../../../BA/Cpp/BA_1_2/BA_1_2/BA_File.cpp"
-#include"../../../BA/Cpp/BA_1_2/BA_1_2/BA_String.cpp"
 #include"../../../BA/Cpp/BA_1_2/BA_1_2/BA_Math.hpp"
 
 #include"../../../BA/Cpp/BA_1_2/BA_1_2/BA_GUI.hpp"
@@ -118,7 +115,7 @@ int main(int argc, char* argv[])
 		}
 	}
 	// init a NULL window
-	ba::ui::QUI ui("MusicVizByMedusaEYE", (_ULL)sideSize, (_ULL)sideSize, 0, NULL);
+	ba::ui::QUI ui("MusicVizByMedusaEYE", (int)sideSize, (int)sideSize);
 	ba::ui::colorSur cs(ui.activeWin, NULL, ui.activeWin->re, true);
 	for (float* p1 = dotsAP.Copy(), *p2 = dotsBP.Copy();
 		p1 != NULL;
@@ -126,11 +123,14 @@ int main(int argc, char* argv[])
 		if (p1[2] <= 2 && (p1[0] >= 0. || p1[1] >= 0.) && (p2[0] >= 0. || p2[1] >= 0.))
 			DrawLineInWindow(p1, p2, &cs);
 	ui.addOtherTex("cst", NULL, &cs.re);
+	ui.activeWin->title = new ba::ui::label(ui.activeWin, "", 0);
+	ui.activeWin->title->re = ui.activeWin->re;
 	// GUI Loop
-	while (ui.pollQuit() == 0)
+	while (! ui.pollQuit())
 	{
 		ui.updateOtherTex("cst", cs.getTex());
-		ui.update(NULL, 1, 1);
+		ui.checkEvent();
+		ui.update();
 	}
 	return MyBA_Quit();
 }
